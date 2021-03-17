@@ -1,4 +1,4 @@
-package io.flutter.plugins.firebaseadmob;
+package io.flutter.plugins.googlemobileads;
 
 import androidx.annotation.NonNull;
 
