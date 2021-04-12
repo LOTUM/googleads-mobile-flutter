@@ -46,6 +46,8 @@ import java.util.Map;
  */
 public class GoogleMobileAdsPlugin implements FlutterPlugin, ActivityAware, MethodCallHandler {
 
+  private static boolean hasNotifiedAboutInitializationCompletion = false;
+
   private static <T> T requireNonNull(T obj) {
     if (obj == null) {
       throw new IllegalArgumentException();
@@ -208,6 +210,11 @@ public class GoogleMobileAdsPlugin implements FlutterPlugin, ActivityAware, Meth
             new OnInitializationCompleteListener() {
               @Override
               public void onInitializationComplete(InitializationStatus initializationStatus) {
+                // Notify only once per app start to avoid result.success crashes:
+                if (hasNotifiedAboutInitializationCompletion) {
+                  return;
+                }
+                hasNotifiedAboutInitializationCompletion = true;
                 result.success(new FlutterInitializationStatus(initializationStatus));
               }
             });
