@@ -16,6 +16,9 @@ package io.flutter.plugins.googlemobileads;
 
 import android.app.Activity;
 import androidx.annotation.NonNull;
+
+import org.jetbrains.annotations.Nullable;
+
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.StandardMethodCodec;
@@ -154,6 +157,18 @@ class AdInstanceManager {
     arguments.put("valueMicros", adValue.valueMicros);
     arguments.put("precision", adValue.precisionType);
     arguments.put("currencyCode", adValue.currencyCode);
+    channel.invokeMethod("onAdEvent", arguments);
+  }
+
+  void onAdFailedToShow(@NonNull FlutterAd ad, @Nullable FlutterAd.FlutterShowAdError error) {
+    Map<Object, Object> arguments = new HashMap<>();
+    arguments.put("adId", adIdFor(ad));
+    arguments.put("eventName", "onAdFailedToShow");
+    if (error == null) {
+      arguments.put("adError", new FlutterAd.FlutterShowAdError(0, "", "(no error provided)"));
+    } else {
+      arguments.put("adError", error);
+    }
     channel.invokeMethod("onAdEvent", arguments);
   }
 

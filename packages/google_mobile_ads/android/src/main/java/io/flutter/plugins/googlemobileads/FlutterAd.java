@@ -15,6 +15,8 @@
 package io.flutter.plugins.googlemobileads;
 
 import androidx.annotation.NonNull;
+
+import com.google.android.gms.ads.AdError;
 import com.google.android.gms.ads.LoadAdError;
 
 abstract class FlutterAd {
@@ -63,6 +65,50 @@ abstract class FlutterAd {
       int result = code;
       result = 31 * result + domain.hashCode();
       result = 31 * result + message.hashCode();
+      return result;
+    }
+  }
+
+  static class FlutterShowAdError {
+    final int code;
+    @NonNull final String domain;
+    @NonNull final String message;
+
+    FlutterShowAdError(@NonNull AdError error) {
+      code = error.getCode();
+      domain = error.getDomain();
+      message = error.getMessage();
+    }
+
+    FlutterShowAdError(int code, @NonNull String domain, @NonNull String message) {
+      this.code = code;
+      this.domain = domain;
+      this.message = message;
+    }
+
+    @Override
+    public boolean equals(Object object) {
+      if (this == object) {
+        return true;
+      } else if (!(object instanceof FlutterShowAdError)) {
+        return false;
+      }
+
+      final FlutterShowAdError that = (FlutterShowAdError) object;
+
+      if (code != that.code) {
+        return false;
+      } else if (!domain.equals(that.domain)) {
+        return false;
+      }
+      return message.equals(that.message);
+    }
+
+    @Override
+    public int hashCode() {
+      int result = code;
+      result = 32 * result + domain.hashCode();
+      result = 32 * result + message.hashCode();
       return result;
     }
   }

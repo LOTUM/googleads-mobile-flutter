@@ -80,6 +80,30 @@
 }
 @end
 
+@implementation FLTShowAdError
+- (instancetype _Nonnull)initWithCode:(NSNumber *_Nonnull)code
+                               domain:(NSString *_Nonnull)domain
+                              message:(NSString *_Nonnull)message {
+    self = [super init];
+    if (self) {
+        _code = code;
+        _domain = domain;
+        _message = message;
+    }
+    return self;
+}
+
+- (instancetype _Nonnull)initWithError:(NSError *_Nonnull)error {
+    self = [super init];
+    if (self) {
+        _code = @(error.code);
+        _domain = error.domain;
+        _message = error.localizedDescription;
+    }
+    return self;
+}
+@end
+
 @implementation FLTPublisherAdRequest
 - (GADRequest *_Nonnull)asDFPRequest {
   DFPRequest *request = [DFPRequest request];
@@ -278,6 +302,10 @@
   [_manager onAdFailedToLoad:self error:[[FLTLoadAdError alloc] initWithError:error]];
 }
 
+- (void)interstitialDidFailToPresentScreen:(GADInterstitial *)ad {
+    [_manager onAdFailedToShow:self error:nil];
+}
+
 - (void)interstitialWillPresentScreen:(GADInterstitial *)ad {
   [_manager onAdOpened:self];
 }
@@ -388,7 +416,15 @@
     [self.rewardedAd presentFromRootViewController:_rootViewController delegate:self];
   } else {
     NSLog(@"RewardedAd failed to show because the ad was not ready.");
+    NSError *error = [[NSError alloc] initWithDomain:@""
+                                                code:-1
+                                            userInfo:@{ NSLocalizedDescriptionKey : @"RewardedAd failed to show because the ad was not ready."}];
+    [_manager onAdFailedToShow:self error:[[FLTShowAdError alloc] initWithError:error]];
   }
+}
+
+- (void)rewardedAd:(nonnull GADRewardedAd *)rewardedAd didFailToPresentWithError:(nonnull NSError *)error {
+    [_manager onAdFailedToShow:self error:[[FLTShowAdError alloc] initWithError:error]];
 }
 
 - (void)rewardedAd:(nonnull GADRewardedAd *)rewardedAd

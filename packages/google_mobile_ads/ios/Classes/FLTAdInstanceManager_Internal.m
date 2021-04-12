@@ -142,6 +142,18 @@
                      @"currencyCode" : adValue.currencyCode
                  }];
 }
+
+- (void)onAdFailedToShow:(id<FLTAd> _Nonnull)ad error:(FLTShowAdError *_Nullable)error {
+  [_channel invokeMethod:@"onAdEvent"
+               arguments:@{
+                   @"adId" : [self adIdFor:ad],
+                   @"eventName" : @"onAdFailedToShow",
+                   @"adError" : error ?: [[FLTLoadAdError alloc] initWithCode:@-1
+                                                                       domain:@""
+                                                                      message:@"(no error provided)"]
+                 }];
+}
+
 @end
 
 @implementation FLTNewGoogleMobileAdsViewFactory
