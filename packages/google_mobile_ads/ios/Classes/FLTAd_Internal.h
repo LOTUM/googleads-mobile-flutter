@@ -58,16 +58,6 @@
 - (instancetype _Nonnull)initWithError:(GADRequestError *_Nonnull)error;
 @end
 
-@interface FLTShowAdError : NSObject
-@property(readonly) NSNumber *_Nonnull code;
-@property(readonly) NSString *_Nonnull domain;
-@property(readonly) NSString *_Nonnull message;
-- (instancetype _Nonnull)initWithCode:(NSNumber *_Nonnull)code
-                               domain:(NSString *_Nonnull)domain
-                              message:(NSString *_Nonnull)message;
-- (instancetype _Nonnull)initWithError:(NSError *_Nonnull)error;
-@end
-
 @protocol FLTAdWithoutView
 - (void)show;
 @end

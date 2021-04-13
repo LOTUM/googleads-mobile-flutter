@@ -160,15 +160,14 @@ class AdInstanceManager {
     channel.invokeMethod("onAdEvent", arguments);
   }
 
-  void onAdFailedToShow(@NonNull FlutterAd ad, @Nullable FlutterAd.FlutterShowAdError error) {
+  void onAdFailedToShow(@NonNull FlutterAd ad, @Nullable FlutterAd.FlutterLoadAdError error) {
     Map<Object, Object> arguments = new HashMap<>();
     arguments.put("adId", adIdFor(ad));
     arguments.put("eventName", "onAdFailedToShow");
-    if (error == null) {
-      arguments.put("adError", new FlutterAd.FlutterShowAdError(0, "", "(no error provided)"));
-    } else {
-      arguments.put("adError", error);
-    }
+    arguments.put("adError", error != null
+      ? error
+      : new FlutterAd.FlutterLoadAdError(0, "", "(no error provided)")
+    );
     channel.invokeMethod("onAdEvent", arguments);
   }
 

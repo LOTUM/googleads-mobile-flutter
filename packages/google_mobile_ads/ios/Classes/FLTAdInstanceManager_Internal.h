@@ -22,7 +22,6 @@
 @class FLTRewardItem;
 @class FLTLoadAdError;
 @class FLTAdValue;
-@class FLTShowAdError;
 
 @interface FLTAdInstanceManager : NSObject
 - (instancetype _Nonnull)initWithBinaryMessenger:
@@ -45,7 +44,7 @@
 - (void)onRewardedAdUserEarnedReward:(FLTRewardedAd *_Nonnull)ad
                               reward:(FLTRewardItem *_Nonnull)reward;
 - (void)onPaidEvent:(id<FLTAd> _Nonnull)ad value:(FLTAdValue *_Nonnull)value;
-- (void)onAdFailedToShow:(id<FLTAd> _Nonnull)ad error:(FLTShowAdError *_Nullable)error;
+- (void)onAdFailedToShow:(id<FLTAd> _Nonnull)ad error:(FLTLoadAdError *_Nullable)error;
 @end
 
 @interface FLTNewGoogleMobileAdsViewFactory : NSObject <FlutterPlatformViewFactory>

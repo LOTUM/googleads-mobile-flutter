@@ -142,7 +142,8 @@ class FlutterRewardedAd extends FlutterAd.FlutterOverlayAd {
 
           @Override
           public void onRewardedAdFailedToShow(AdError adError) {
-            manager.onAdFailedToShow(FlutterRewardedAd.this, new FlutterShowAdError(adError));
+            manager.onAdFailedToShow(FlutterRewardedAd.this,
+              new FlutterLoadAdError(adError.getCode(), adError.getDomain(), adError.getMessage()));
           }
         };
     rewardedAd.show(manager.activity, adCallback);

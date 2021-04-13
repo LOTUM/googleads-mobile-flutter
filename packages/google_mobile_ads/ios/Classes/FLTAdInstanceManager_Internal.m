@@ -133,17 +133,17 @@
 }
 
 - (void)onPaidEvent:(id<FLTAd> _Nonnull)ad value:(FLTAdValue *_Nonnull)adValue {
-    [_channel invokeMethod:@"onAdEvent"
-                 arguments:@{
-                     @"adId" : [self adIdFor:ad],
-                     @"eventName" : @"onPaidEvent",
-                     @"valueMicros" : adValue.valueMicros,
-                     @"precision" : [NSNumber numberWithInteger : adValue.precision],
-                     @"currencyCode" : adValue.currencyCode
-                 }];
+  [_channel invokeMethod:@"onAdEvent"
+               arguments:@{
+                   @"adId" : [self adIdFor:ad],
+                   @"eventName" : @"onPaidEvent",
+                   @"valueMicros" : adValue.valueMicros,
+                   @"precision" : [NSNumber numberWithInteger : adValue.precision],
+                   @"currencyCode" : adValue.currencyCode
+               }];
 }
 
-- (void)onAdFailedToShow:(id<FLTAd> _Nonnull)ad error:(FLTShowAdError *_Nullable)error {
+- (void)onAdFailedToShow:(id<FLTAd> _Nonnull)ad error:(FLTLoadAdError *_Nullable)error {
   [_channel invokeMethod:@"onAdEvent"
                arguments:@{
                    @"adId" : [self adIdFor:ad],
