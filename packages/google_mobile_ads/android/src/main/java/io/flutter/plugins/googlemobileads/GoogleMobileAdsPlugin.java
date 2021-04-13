@@ -46,8 +46,6 @@ import java.util.Map;
  */
 public class GoogleMobileAdsPlugin implements FlutterPlugin, ActivityAware, MethodCallHandler {
 
-  private static boolean hasNotifiedAboutInitializationCompletion = false;
-
   private static <T> T requireNonNull(T obj) {
     if (obj == null) {
       throw new IllegalArgumentException();
@@ -59,6 +57,7 @@ public class GoogleMobileAdsPlugin implements FlutterPlugin, ActivityAware, Meth
   @Nullable private FlutterPluginBinding pluginBinding;
   @Nullable private AdInstanceManager instanceManager;
   private final Map<String, NativeAdFactory> nativeAdFactories = new HashMap<>();
+  private boolean hasNotifiedAboutInitializationCompletion = false;
 
   /**
    * Interface used to display a {@link com.google.android.gms.ads.formats.UnifiedNativeAd}.
