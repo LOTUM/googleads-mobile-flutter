@@ -57,6 +57,7 @@ public class GoogleMobileAdsPlugin implements FlutterPlugin, ActivityAware, Meth
   @Nullable private FlutterPluginBinding pluginBinding;
   @Nullable private AdInstanceManager instanceManager;
   private final Map<String, NativeAdFactory> nativeAdFactories = new HashMap<>();
+  private boolean hasNotifiedAboutInitializationCompletion = false;
 
   /**
    * Interface used to display a {@link com.google.android.gms.ads.formats.UnifiedNativeAd}.
@@ -208,6 +209,11 @@ public class GoogleMobileAdsPlugin implements FlutterPlugin, ActivityAware, Meth
             new OnInitializationCompleteListener() {
               @Override
               public void onInitializationComplete(InitializationStatus initializationStatus) {
+                // Notify only once per app start to avoid result.success crashes:
+                if (hasNotifiedAboutInitializationCompletion) {
+                  return;
+                }
+                hasNotifiedAboutInitializationCompletion = true;
                 result.success(new FlutterInitializationStatus(initializationStatus));
               }
             });
