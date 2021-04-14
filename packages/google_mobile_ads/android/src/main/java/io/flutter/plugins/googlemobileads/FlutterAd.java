@@ -15,8 +15,6 @@
 package io.flutter.plugins.googlemobileads;
 
 import androidx.annotation.NonNull;
-
-import com.google.android.gms.ads.AdError;
 import com.google.android.gms.ads.LoadAdError;
 
 abstract class FlutterAd {
