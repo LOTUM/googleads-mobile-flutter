@@ -83,6 +83,8 @@ class FlutterInterstitialAd extends FlutterAd.FlutterOverlayAd {
   public void show() {
     if (ad == null || !ad.isLoaded()) {
       Log.e(TAG, "The interstitial wasn't loaded yet.");
+      manager.onAdFailedToShow(FlutterInterstitialAd.this,
+        new FlutterLoadAdError(-1, "", "The interstitial wasn't loaded yet."));
       return;
     }
     ad.show();

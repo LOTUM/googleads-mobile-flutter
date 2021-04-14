@@ -118,6 +118,8 @@ class FlutterRewardedAd extends FlutterAd.FlutterOverlayAd {
   public void show() {
     if (rewardedAd == null || !rewardedAd.isLoaded()) {
       Log.e(TAG, "The rewarded ad wasn't loaded yet.");
+      manager.onAdFailedToShow(FlutterRewardedAd.this,
+        new FlutterLoadAdError(-1, "", "The rewarded ad wasn't loaded yet."));
       return;
     }
 

@@ -267,6 +267,10 @@
     [self.interstitial presentFromRootViewController:_rootViewController];
   } else {
     NSLog(@"InterstitialAd failed to show because the ad was not ready.");
+    [_manager onAdFailedToShow:self
+                         error:[[FLTLoadAdError alloc] initWithCode:@-1
+                                                             domain:@""
+                                                            message:@"InterstitialAd failed to show because the ad was not ready."]];
   }
 }
 
