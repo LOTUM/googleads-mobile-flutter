@@ -235,6 +235,7 @@ class AdListener {
     this.onRewardedAdUserEarnedReward,
     this.onAppEvent,
     this.onPaidEvent,
+    this.onAdFailedToShow,
   });
 
   /// Called when an ad is successfully received.
@@ -274,6 +275,9 @@ class AdListener {
     int precision,
     String currencyCode,
   ) onPaidEvent;
+
+  /// Called when an ad failed to show.
+  final void Function(Ad ad, LoadAdError error) onAdFailedToShow;
 }
 
 /// The base class for all ads.

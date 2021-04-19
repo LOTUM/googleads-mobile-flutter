@@ -18,6 +18,8 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
+
+import com.google.android.gms.ads.AdError;
 import com.google.android.gms.ads.LoadAdError;
 import com.google.android.gms.ads.rewarded.RewardItem;
 import com.google.android.gms.ads.rewarded.RewardedAd;
@@ -116,6 +118,8 @@ class FlutterRewardedAd extends FlutterAd.FlutterOverlayAd {
   public void show() {
     if (rewardedAd == null || !rewardedAd.isLoaded()) {
       Log.e(TAG, "The rewarded ad wasn't loaded yet.");
+      manager.onAdFailedToShow(FlutterRewardedAd.this,
+        new FlutterLoadAdError(-1, "", "The rewarded ad wasn't loaded yet."));
       return;
     }
 
@@ -136,6 +140,12 @@ class FlutterRewardedAd extends FlutterAd.FlutterOverlayAd {
             manager.onRewardedAdUserEarnedReward(
                 FlutterRewardedAd.this,
                 new FlutterRewardItem(reward.getAmount(), reward.getType()));
+          }
+
+          @Override
+          public void onRewardedAdFailedToShow(AdError adError) {
+            manager.onAdFailedToShow(FlutterRewardedAd.this,
+              new FlutterLoadAdError(adError.getCode(), adError.getDomain(), adError.getMessage()));
           }
         };
     rewardedAd.show(manager.activity, adCallback);

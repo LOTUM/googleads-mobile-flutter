@@ -104,6 +104,9 @@ class AdInstanceManager {
           arguments['currencyCode'],
         );
         break;
+      case 'onAdFailedToShow':
+        ad.listener?.onAdFailedToShow(ad, arguments['adError']);
+        break;
       default:
         debugPrint('invalid ad event name: $eventName');
     }

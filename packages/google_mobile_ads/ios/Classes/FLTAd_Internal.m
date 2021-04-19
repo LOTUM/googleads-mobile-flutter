@@ -267,6 +267,10 @@
     [self.interstitial presentFromRootViewController:_rootViewController];
   } else {
     NSLog(@"InterstitialAd failed to show because the ad was not ready.");
+    [_manager onAdFailedToShow:self
+                         error:[[FLTLoadAdError alloc] initWithCode:@-1
+                                                             domain:@""
+                                                            message:@"InterstitialAd failed to show because the ad was not ready."]];
   }
 }
 
@@ -276,6 +280,10 @@
 
 - (void)interstitial:(GADInterstitial *)ad didFailToReceiveAdWithError:(GADRequestError *)error {
   [_manager onAdFailedToLoad:self error:[[FLTLoadAdError alloc] initWithError:error]];
+}
+
+- (void)interstitialDidFailToPresentScreen:(GADInterstitial *)ad {
+    [_manager onAdFailedToShow:self error:nil];
 }
 
 - (void)interstitialWillPresentScreen:(GADInterstitial *)ad {
@@ -388,7 +396,15 @@
     [self.rewardedAd presentFromRootViewController:_rootViewController delegate:self];
   } else {
     NSLog(@"RewardedAd failed to show because the ad was not ready.");
+    NSError *error = [[NSError alloc] initWithDomain:@""
+                                                code:-1
+                                            userInfo:@{ NSLocalizedDescriptionKey : @"RewardedAd failed to show because the ad was not ready."}];
+    [_manager onAdFailedToShow:self error:[[FLTLoadAdError alloc] initWithError:error]];
   }
+}
+
+- (void)rewardedAd:(nonnull GADRewardedAd *)rewardedAd didFailToPresentWithError:(nonnull NSError *)error {
+    [_manager onAdFailedToShow:self error:[[FLTLoadAdError alloc] initWithError:error]];
 }
 
 - (void)rewardedAd:(nonnull GADRewardedAd *)rewardedAd
