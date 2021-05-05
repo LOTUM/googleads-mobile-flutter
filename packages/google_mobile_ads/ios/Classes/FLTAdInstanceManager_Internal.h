@@ -43,6 +43,7 @@
 - (void)onAdClosed:(id<FLTAd> _Nonnull)ad;
 - (void)onRewardedAdUserEarnedReward:(FLTRewardedAd *_Nonnull)ad
                               reward:(FLTRewardItem *_Nonnull)reward;
+- (void)disposeAllAds;
 - (void)onPaidEvent:(id<FLTAd> _Nonnull)ad value:(FLTAdValue *_Nonnull)value;
 - (void)onAdFailedToShow:(id<FLTAd> _Nonnull)ad error:(FLTLoadAdError *_Nullable)error;
 @end

@@ -12,8 +12,6 @@
 pubspec.lock
 flutter_export_environment.sh
 
-examples/all_plugins/pubspec.yaml
-
 Podfile.lock
 Pods/
 .symlinks/
@@ -72,6 +70,5 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-firebase-debug.log
-firestore-debug.log
-ui-debug.log
+.editorconfig
+.vscode/

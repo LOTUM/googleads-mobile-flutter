@@ -33,6 +33,7 @@ class FlutterRewardedAd extends FlutterAd.FlutterOverlayAd {
   @NonNull private final String adUnitId;
   @Nullable private final FlutterAdRequest request;
   @Nullable private final FlutterPublisherAdRequest publisherRequest;
+  @Nullable private final FlutterServerSideVerificationOptions serverSideVerificationOptions;
   @Nullable RewardedAd rewardedAd;
 
   static class FlutterRewardItem {
@@ -70,26 +71,34 @@ class FlutterRewardedAd extends FlutterAd.FlutterOverlayAd {
   public FlutterRewardedAd(
       @NonNull AdInstanceManager manager,
       @NonNull String adUnitId,
-      @NonNull FlutterAdRequest request) {
+      @NonNull FlutterAdRequest request,
+      @Nullable FlutterServerSideVerificationOptions serverSideVerificationOptions) {
     this.manager = manager;
     this.adUnitId = adUnitId;
     this.request = request;
     this.publisherRequest = null;
+    this.serverSideVerificationOptions = serverSideVerificationOptions;
   }
 
   public FlutterRewardedAd(
       @NonNull AdInstanceManager manager,
       @NonNull String adUnitId,
-      @NonNull FlutterPublisherAdRequest publisherRequest) {
+      @NonNull FlutterPublisherAdRequest publisherRequest,
+      @Nullable FlutterServerSideVerificationOptions serverSideVerificationOptions) {
     this.manager = manager;
     this.adUnitId = adUnitId;
     this.publisherRequest = publisherRequest;
     this.request = null;
+    this.serverSideVerificationOptions = serverSideVerificationOptions;
   }
 
   @Override
   void load() {
     rewardedAd = createRewardedAd();
+    if (serverSideVerificationOptions != null) {
+      rewardedAd.setServerSideVerificationOptions(
+          serverSideVerificationOptions.asServerSideVerificationOptions());
+    }
     final RewardedAdLoadCallback adLoadCallback =
         new RewardedAdLoadCallback() {
           @Override

@@ -153,12 +153,13 @@
 - (void)testLoadNativeAd {
   FLTAdRequest *request = [[FLTAdRequest alloc] init];
   request.keywords = @[ @"apple" ];
-  FLTNativeAd *ad =
-      [[FLTNativeAd alloc] initWithAdUnitId:@"testAdUnitId"
-                                    request:request
-                            nativeAdFactory:OCMProtocolMock(@protocol(FLTNativeAdFactory))
-                              customOptions:nil
-                         rootViewController:OCMClassMock([UIViewController class])];
+  id mockNativeAdFactory = OCMProtocolMock(@protocol(FLTNativeAdFactory));
+
+  FLTNativeAd *ad = [[FLTNativeAd alloc] initWithAdUnitId:@"testAdUnitId"
+                                                  request:request
+                                          nativeAdFactory:mockNativeAdFactory
+                                            customOptions:[NSNull null]
+                                       rootViewController:OCMClassMock([UIViewController class])];
 
   FLTNativeAd *mockNativeAd = OCMPartialMock(ad);
   GADAdLoader *mockLoader = OCMClassMock([GADAdLoader class]);
@@ -169,15 +170,24 @@
                           GADRequest *requestArg = obj;
                           return [requestArg.keywords isEqualToArray:@[ @"apple" ]];
                         }]]);
+
+  // Check that nil is used instead of null when customOptions is Null
+  GADUnifiedNativeAd *mockUnifiedNativeAd = OCMClassMock([GADUnifiedNativeAd class]);
+  [ad adLoader:mockLoader didReceiveUnifiedNativeAd:mockUnifiedNativeAd];
+  OCMVerify([mockNativeAdFactory createNativeAd:mockUnifiedNativeAd customOptions:[OCMArg isNil]]);
 }
 
 - (void)testLoadRewardedAd {
   FLTAdRequest *request = [[FLTAdRequest alloc] init];
   request.keywords = @[ @"apple" ];
-  FLTRewardedAd *ad =
-      [[FLTRewardedAd alloc] initWithAdUnitId:@"testId"
-                                      request:request
-                           rootViewController:OCMClassMock([UIViewController class])];
+  FLTServerSideVerificationOptions *serverSideVerificationOptions =
+      [[FLTServerSideVerificationOptions alloc] init];
+  serverSideVerificationOptions.customRewardString = @"reward";
+  serverSideVerificationOptions.userIdentifier = @"user-id";
+  FLTRewardedAd *ad = [[FLTRewardedAd alloc] initWithAdUnitId:@"testId"
+                                                      request:request
+                                           rootViewController:OCMClassMock([UIViewController class])
+                                serverSideVerificationOptions:serverSideVerificationOptions];
 
   FLTRewardedAd *mockFltAd = OCMPartialMock(ad);
   GADRewardedAd *mockRewardedAd = OCMClassMock([GADRewardedAd class]);
@@ -194,10 +204,10 @@
 - (void)testShowRewardedAd {
   FLTAdRequest *request = [[FLTAdRequest alloc] init];
   request.keywords = @[ @"apple" ];
-  FLTRewardedAd *ad =
-      [[FLTRewardedAd alloc] initWithAdUnitId:@"testId"
-                                      request:request
-                           rootViewController:OCMClassMock([UIViewController class])];
+  FLTRewardedAd *ad = [[FLTRewardedAd alloc] initWithAdUnitId:@"testId"
+                                                      request:request
+                                           rootViewController:OCMClassMock([UIViewController class])
+                                serverSideVerificationOptions:nil];
 
   FLTRewardedAd *mockFltAd = OCMPartialMock(ad);
   GADRewardedAd *mockRewardedAd = OCMClassMock([GADRewardedAd class]);
@@ -211,10 +221,10 @@
 - (void)testLoadRewardedAdWithPublisherRequest {
   FLTPublisherAdRequest *request = [[FLTPublisherAdRequest alloc] init];
   request.keywords = @[ @"apple" ];
-  FLTRewardedAd *ad =
-      [[FLTRewardedAd alloc] initWithAdUnitId:@"testId"
-                                      request:request
-                           rootViewController:OCMClassMock([UIViewController class])];
+  FLTRewardedAd *ad = [[FLTRewardedAd alloc] initWithAdUnitId:@"testId"
+                                                      request:request
+                                           rootViewController:OCMClassMock([UIViewController class])
+                                serverSideVerificationOptions:nil];
 
   FLTRewardedAd *mockFltAd = OCMPartialMock(ad);
   GADRewardedAd *mockRewardedAd = OCMClassMock([GADRewardedAd class]);
@@ -264,6 +274,34 @@
 
   XCTAssertNil([_manager adFor:@(1)]);
   XCTAssertNil([_manager adIdFor:bannerAd]);
+}
+
+- (void)testDisposeAllAds {
+  FLTAdSize *size = [[FLTAdSize alloc] initWithWidth:@(1) height:@(2)];
+  FLTBannerAd *bannerAd1 =
+      [[FLTBannerAd alloc] initWithAdUnitId:@"testId"
+                                       size:size
+                                    request:[[FLTAdRequest alloc] init]
+                         rootViewController:OCMClassMock([UIViewController class])];
+  FLTBannerAd *mockBannerAd1 = OCMPartialMock(bannerAd1);
+  OCMStub([mockBannerAd1 load]);
+
+  FLTBannerAd *bannerAd2 =
+      [[FLTBannerAd alloc] initWithAdUnitId:@"testId"
+                                       size:size
+                                    request:[[FLTAdRequest alloc] init]
+                         rootViewController:OCMClassMock([UIViewController class])];
+  FLTBannerAd *mockBannerAd2 = OCMPartialMock(bannerAd2);
+  OCMStub([mockBannerAd2 load]);
+
+  [_manager loadAd:bannerAd1 adId:@(1)];
+  [_manager loadAd:bannerAd2 adId:@(2)];
+  [_manager disposeAllAds];
+
+  XCTAssertNil([_manager adFor:@(1)]);
+  XCTAssertNil([_manager adIdFor:bannerAd1]);
+  XCTAssertNil([_manager adFor:@(2)]);
+  XCTAssertNil([_manager adIdFor:bannerAd2]);
 }
 
 - (void)testOnAdLoaded {
@@ -420,10 +458,10 @@
 }
 
 - (void)testOnRewardedAdUserEarnedReward {
-  FLTRewardedAd *ad =
-      [[FLTRewardedAd alloc] initWithAdUnitId:@"testId"
-                                      request:[[FLTAdRequest alloc] init]
-                           rootViewController:OCMClassMock([UIViewController class])];
+  FLTRewardedAd *ad = [[FLTRewardedAd alloc] initWithAdUnitId:@"testId"
+                                                      request:[[FLTAdRequest alloc] init]
+                                           rootViewController:OCMClassMock([UIViewController class])
+                                serverSideVerificationOptions:nil];
   [_manager loadAd:ad adId:@(1)];
 
   [_manager onRewardedAdUserEarnedReward:ad

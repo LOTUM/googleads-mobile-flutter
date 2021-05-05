@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// @dart=2.9
-
 import 'dart:async';
 
 import 'package:google_mobile_ads/src/ad_instance_manager.dart';
@@ -27,7 +25,7 @@ void main() {
 
   group('GoogleMobileAds', () {
     final List<MethodCall> log = <MethodCall>[];
-    final MessageCodec codec = AdMessageCodec();
+    final MessageCodec<dynamic> codec = AdMessageCodec();
 
     setUp(() async {
       log.clear();
@@ -58,7 +56,7 @@ void main() {
         maxAdContentRating: MaxAdContentRating.ma,
         tagForChildDirectedTreatment: TagForChildDirectedTreatment.yes,
         tagForUnderAgeOfConsent: TagForUnderAgeOfConsent.yes,
-        testDeviceIds: ["test-device-id"],
+        testDeviceIds: <String>['test-device-id'],
       );
       await instanceManager.updateRequestConfiguration(requestConfiguration);
       expect(log, <Matcher>[
@@ -67,7 +65,7 @@ void main() {
               'maxAdContentRating': MaxAdContentRating.ma,
               'tagForChildDirectedTreatment': TagForChildDirectedTreatment.yes,
               'tagForUnderAgeOfConsent': TagForUnderAgeOfConsent.yes,
-              'testDeviceIds': ['test-device-id'],
+              'testDeviceIds': <String>['test-device-id'],
             })
       ]);
     });
@@ -181,43 +179,88 @@ void main() {
     });
 
     testWidgets('build ad widget', (WidgetTester tester) async {
+      final NativeAd native = NativeAd(
+        adUnitId: NativeAd.testAdUnitId,
+        factoryId: '0',
+        listener: AdListener(),
+        request: AdRequest(),
+      );
+
+      await native.load();
+
       await tester.pumpWidget(
         Builder(
           builder: (BuildContext context) {
-            final NativeAd native = NativeAd(
-              adUnitId: NativeAd.testAdUnitId,
-              factoryId: '0',
-              listener: AdListener(),
-              request: AdRequest(),
-            );
-
             AdWidget widget = AdWidget(ad: native);
-            var buildWidget = widget.createElement().build();
+            Widget buildWidget = widget.createElement().build();
             expect(buildWidget, isA<PlatformViewLink>());
             return widget;
           },
         ),
       );
+
+      await native.dispose();
     });
 
     testWidgets('build ad widget', (WidgetTester tester) async {
+      final NativeAd native = NativeAd(
+        adUnitId: NativeAd.testAdUnitId,
+        factoryId: '0',
+        listener: AdListener(),
+        request: AdRequest(),
+      );
+
+      await native.load();
+
       await tester.pumpWidget(
         Builder(
           builder: (BuildContext context) {
-            final NativeAd native = NativeAd(
-              adUnitId: NativeAd.testAdUnitId,
-              factoryId: '0',
-              listener: AdListener(),
-              request: AdRequest(),
-            );
-
             AdWidget widget = AdWidget(ad: native);
-            var buildWidget = widget.createElement().build();
+            Widget buildWidget = widget.createElement().build();
             expect(buildWidget, isA<PlatformViewLink>());
             return widget;
           },
         ),
       );
+
+      await native.dispose();
+    });
+
+    testWidgets('warns when ad has not been loaded',
+        (WidgetTester tester) async {
+      final NativeAd ad = NativeAd(
+        adUnitId: NativeAd.testAdUnitId,
+        factoryId: '0',
+        listener: AdListener(),
+        request: AdRequest(),
+      );
+
+      try {
+        await tester.pumpWidget(
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: SizedBox(
+              width: 100,
+              height: 100,
+              child: Stack(
+                children: <Widget>[
+                  AdWidget(ad: ad),
+                ],
+              ),
+            ),
+          ),
+        );
+      } finally {
+        dynamic exception = tester.takeException();
+        expect(exception, isA<FlutterError>());
+        expect(
+            (exception as FlutterError).toStringDeep(),
+            'FlutterError\n'
+            '   AdWidget requires Ad.load to be called before AdWidget is\n'
+            '   inserted into the tree\n'
+            '   Parameter ad is not loaded. Call Ad.load before AdWidget is\n'
+            '   inserted into the tree.\n');
+      }
     });
 
     testWidgets('warns when ad object is reused', (WidgetTester tester) async {
@@ -345,10 +388,13 @@ void main() {
 
     test('load rewarded', () async {
       final RewardedAd rewarded = RewardedAd(
-        adUnitId: RewardedAd.testAdUnitId,
-        listener: AdListener(),
-        request: AdRequest(),
-      );
+          adUnitId: RewardedAd.testAdUnitId,
+          listener: AdListener(),
+          request: AdRequest(),
+          serverSideVerificationOptions: ServerSideVerificationOptions(
+            userId: 'test-user-id',
+            customData: 'test-custom-data',
+          ));
 
       await rewarded.load();
 
@@ -358,6 +404,8 @@ void main() {
           'adUnitId': RewardedAd.testAdUnitId,
           'request': rewarded.request,
           'publisherRequest': null,
+          'serverSideVerificationOptions':
+              rewarded.serverSideVerificationOptions,
         }),
       ]);
 
@@ -369,6 +417,10 @@ void main() {
         adUnitId: RewardedAd.testAdUnitId,
         listener: AdListener(),
         publisherRequest: PublisherAdRequest(),
+        serverSideVerificationOptions: ServerSideVerificationOptions(
+          userId: 'test-user-id',
+          customData: 'test-custom-data',
+        ),
       );
 
       await rewarded.load();
@@ -379,6 +431,8 @@ void main() {
           'adUnitId': RewardedAd.testAdUnitId,
           'request': null,
           'publisherRequest': rewarded.publisherRequest,
+          'serverSideVerificationOptions':
+              rewarded.serverSideVerificationOptions,
         }),
       ]);
 
@@ -451,7 +505,7 @@ void main() {
       await instanceManager.channel.binaryMessenger.handlePlatformMessage(
         'plugins.flutter.io/google_mobile_ads',
         data,
-        (ByteData data) {},
+        (ByteData? data) {},
       );
 
       expect(adEventCompleter.future, completion(banner));
@@ -484,7 +538,7 @@ void main() {
       await instanceManager.channel.binaryMessenger.handlePlatformMessage(
         'plugins.flutter.io/google_mobile_ads',
         data,
-        (ByteData data) {},
+        (ByteData? data) {},
       );
 
       final List<dynamic> results = await resultsCompleter.future;
@@ -516,7 +570,7 @@ void main() {
       await instanceManager.channel.binaryMessenger.handlePlatformMessage(
         'plugins.flutter.io/google_mobile_ads',
         data,
-        (ByteData data) {},
+        (ByteData? data) {},
       );
 
       expect(adEventCompleter.future, completion(native));
@@ -544,7 +598,7 @@ void main() {
       await instanceManager.channel.binaryMessenger.handlePlatformMessage(
         'plugins.flutter.io/google_mobile_ads',
         data,
-        (ByteData data) {},
+        (ByteData? data) {},
       );
 
       expect(adEventCompleter.future, completion(native));
@@ -572,7 +626,7 @@ void main() {
       await instanceManager.channel.binaryMessenger.handlePlatformMessage(
         'plugins.flutter.io/google_mobile_ads',
         data,
-        (ByteData data) {},
+        (ByteData? data) {},
       );
 
       expect(adEventCompleter.future, completion(banner));
@@ -600,7 +654,7 @@ void main() {
       await instanceManager.channel.binaryMessenger.handlePlatformMessage(
         'plugins.flutter.io/google_mobile_ads',
         data,
-        (ByteData data) {},
+        (ByteData? data) {},
       );
 
       expect(adEventCompleter.future, completion(banner));
@@ -628,7 +682,7 @@ void main() {
       await instanceManager.channel.binaryMessenger.handlePlatformMessage(
         'plugins.flutter.io/google_mobile_ads',
         data,
-        (ByteData data) {},
+        (ByteData? data) {},
       );
 
       expect(adEventCompleter.future, completion(banner));
@@ -661,7 +715,7 @@ void main() {
       await instanceManager.channel.binaryMessenger.handlePlatformMessage(
         'plugins.flutter.io/google_mobile_ads',
         data,
-        (ByteData data) {},
+        (ByteData? data) {},
       );
 
       final List<dynamic> result = await resultCompleter.future;
@@ -698,25 +752,25 @@ void main() {
     });
 
     test('encode/decode AdSize', () async {
-      final ByteData byteData = codec.encodeMessage(AdSize.banner);
+      final ByteData byteData = codec.encodeMessage(AdSize.banner)!;
       expect(codec.decodeMessage(byteData), AdSize.banner);
     });
 
     test('encode/decode AdRequest', () async {
       final AdRequest adRequest = AdRequest(
-          keywords: ['1', '2', '3'],
+          keywords: <String>['1', '2', '3'],
           contentUrl: 'contentUrl',
-          testDevices: ['Android', 'iOS'],
+          testDevices: <String>['Android', 'iOS'],
           nonPersonalizedAds: false);
 
-      final ByteData byteData = codec.encodeMessage(adRequest);
+      final ByteData byteData = codec.encodeMessage(adRequest)!;
       expect(codec.decodeMessage(byteData), adRequest);
     });
 
     test('encode/decode $LoadAdError', () async {
       final ByteData byteData = codec.encodeMessage(
         LoadAdError(1, 'domain', 'message'),
-      );
+      )!;
       final LoadAdError error = codec.decodeMessage(byteData);
       expect(error.code, 1);
       expect(error.domain, 'domain');
@@ -724,7 +778,7 @@ void main() {
     });
 
     test('encode/decode $RewardItem', () async {
-      final ByteData byteData = codec.encodeMessage(RewardItem(1, 'type'));
+      final ByteData byteData = codec.encodeMessage(RewardItem(1, 'type'))!;
 
       final RewardItem result = codec.decodeMessage(byteData);
       expect(result.amount, 1);
@@ -740,7 +794,7 @@ void main() {
           'him': <String>['is']
         },
         nonPersonalizedAds: true,
-      ));
+      ))!;
 
       expect(
         codec.decodeMessage(byteData),
@@ -783,7 +837,7 @@ void main() {
       await instanceManager.channel.binaryMessenger.handlePlatformMessage(
         'plugins.flutter.io/google_mobile_ads',
         data,
-        (ByteData data) {},
+        (ByteData? data) {},
       );
 
       expect(banner.isLoaded(), completion(true));

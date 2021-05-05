@@ -42,9 +42,11 @@ void main() {
               'aName': AdapterStatus(
                 AdapterInitializationState.notReady,
                 'desc',
-                null,
+                0,
               ),
             });
+          case '_init':
+            return null;
           default:
             assert(false);
             return null;
@@ -54,7 +56,7 @@ void main() {
 
     test('encode/decode $AdapterInitializationState', () {
       final ByteData byteData =
-          codec.encodeMessage(AdapterInitializationState.ready);
+          codec.encodeMessage(AdapterInitializationState.ready)!;
 
       final AdapterInitializationState result = codec.decodeMessage(byteData);
       expect(result, AdapterInitializationState.ready);
@@ -66,7 +68,7 @@ void main() {
         AdapterInitializationState.notReady,
         'describe',
         23,
-      ));
+      ))!;
 
       AdapterStatus result = codec.decodeMessage(byteData);
       expect(result.state, AdapterInitializationState.notReady);
@@ -83,7 +85,7 @@ void main() {
     test('handle int values for AdapterStatus', () {
       final WriteBuffer buffer = WriteBuffer();
       codec.writeValue(buffer, AdapterInitializationState.ready);
-      codec.writeValue(buffer, null);
+      codec.writeValue(buffer, 'aDescription');
       codec.writeValue(buffer, 23);
 
       expect(
@@ -101,29 +103,31 @@ void main() {
         'adMediation': AdapterStatus(
           AdapterInitializationState.ready,
           'aDescription',
-          null,
+          0,
         ),
-      }));
+      }))!;
 
       final InitializationStatus result = codec.decodeMessage(byteData);
       expect(result.adapterStatuses, hasLength(1));
-      final AdapterStatus status = result.adapterStatuses['adMediation'];
+      final AdapterStatus status = result.adapterStatuses['adMediation']!;
       expect(status.state, AdapterInitializationState.ready);
       expect(status.description, 'aDescription');
-      expect(status.latency, null);
+      expect(status.latency, 0);
     });
 
     test('$MobileAds.initialize', () async {
       final InitializationStatus result = await MobileAds.instance.initialize();
 
-      expect(log,
-          <Matcher>[isMethodCall("MobileAds#initialize", arguments: null)]);
+      expect(log, <Matcher>[
+        isMethodCall('_init', arguments: null),
+        isMethodCall('MobileAds#initialize', arguments: null)
+      ]);
 
       expect(result.adapterStatuses, hasLength(1));
-      final AdapterStatus status = result.adapterStatuses['aName'];
+      final AdapterStatus status = result.adapterStatuses['aName']!;
       expect(status.state, AdapterInitializationState.notReady);
       expect(status.description, 'desc');
-      expect(status.latency, null);
+      expect(status.latency, 0);
     });
   });
 }

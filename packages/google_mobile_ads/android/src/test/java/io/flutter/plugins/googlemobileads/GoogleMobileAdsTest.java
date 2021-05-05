@@ -34,8 +34,10 @@ import com.google.android.gms.ads.formats.UnifiedNativeAdView;
 import com.google.android.gms.ads.rewarded.RewardedAd;
 import com.google.android.gms.ads.rewarded.RewardedAdCallback;
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback;
+import com.google.android.gms.ads.rewarded.ServerSideVerificationOptions;
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodCall;
+import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.StandardMethodCodec;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -45,6 +47,7 @@ import org.hamcrest.Matcher;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatcher;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
@@ -197,8 +200,10 @@ public class GoogleMobileAdsTest {
     final PublisherAdRequest mockRequest = mock(PublisherAdRequest.class);
     when(mockFlutterRequest.asPublisherAdRequest()).thenReturn(mockRequest);
 
+    final FlutterServerSideVerificationOptions options =
+        new FlutterServerSideVerificationOptions("userId", "customData");
     final FlutterRewardedAd rewardedAd =
-        new FlutterRewardedAd(testManager, "testId", mockFlutterRequest);
+        new FlutterRewardedAd(testManager, "testId", mockFlutterRequest, options);
 
     final FlutterRewardedAd mockFlutterAd = spy(rewardedAd);
     final RewardedAd mockPublisherAd = mock(RewardedAd.class);
@@ -209,6 +214,50 @@ public class GoogleMobileAdsTest {
         ArgumentCaptor.forClass(PublisherAdRequest.class);
     verify(mockPublisherAd)
         .loadAd(captor.capture(), ArgumentMatchers.any(RewardedAdLoadCallback.class));
+    ArgumentMatcher<ServerSideVerificationOptions> serverSideVerificationOptionsArgumentMatcher =
+        new ArgumentMatcher<ServerSideVerificationOptions>() {
+          @Override
+          public boolean matches(ServerSideVerificationOptions argument) {
+            return argument.getCustomData().equals(options.getCustomData())
+                && argument.getUserId().equals(options.getUserId());
+          }
+        };
+    verify(mockPublisherAd)
+        .setServerSideVerificationOptions(
+            ArgumentMatchers.argThat(serverSideVerificationOptionsArgumentMatcher));
+    assertEquals(captor.getValue(), mockRequest);
+  }
+
+  @Test
+  public void loadRewardedAdWithPublisherRequest_nullServerSideOptions() {
+    final FlutterPublisherAdRequest mockFlutterRequest = mock(FlutterPublisherAdRequest.class);
+    final PublisherAdRequest mockRequest = mock(PublisherAdRequest.class);
+    when(mockFlutterRequest.asPublisherAdRequest()).thenReturn(mockRequest);
+
+    final FlutterServerSideVerificationOptions options =
+        new FlutterServerSideVerificationOptions(null, null);
+    final FlutterRewardedAd rewardedAd =
+        new FlutterRewardedAd(testManager, "testId", mockFlutterRequest, options);
+
+    final FlutterRewardedAd mockFlutterAd = spy(rewardedAd);
+    final RewardedAd mockPublisherAd = mock(RewardedAd.class);
+    doReturn(mockPublisherAd).when(mockFlutterAd).createRewardedAd();
+    mockFlutterAd.load();
+
+    final ArgumentCaptor<PublisherAdRequest> captor =
+        ArgumentCaptor.forClass(PublisherAdRequest.class);
+    verify(mockPublisherAd)
+        .loadAd(captor.capture(), ArgumentMatchers.any(RewardedAdLoadCallback.class));
+    ArgumentMatcher<ServerSideVerificationOptions> serverSideVerificationOptionsArgumentMatcher =
+        new ArgumentMatcher<ServerSideVerificationOptions>() {
+          @Override
+          public boolean matches(ServerSideVerificationOptions argument) {
+            return argument.getCustomData().isEmpty() && argument.getUserId().isEmpty();
+          }
+        };
+    verify(mockPublisherAd)
+        .setServerSideVerificationOptions(
+            ArgumentMatchers.argThat(serverSideVerificationOptionsArgumentMatcher));
     assertEquals(captor.getValue(), mockRequest);
   }
 
@@ -217,7 +266,7 @@ public class GoogleMobileAdsTest {
     final FlutterAdRequest mockFlutterRequest = mock(FlutterAdRequest.class);
 
     final FlutterRewardedAd rewardedAd =
-        new FlutterRewardedAd(testManager, "testId", mockFlutterRequest);
+        new FlutterRewardedAd(testManager, "testId", mockFlutterRequest, null);
 
     final FlutterRewardedAd mockFlutterAd = spy(rewardedAd);
     final RewardedAd mockRewardedAd = mock(RewardedAd.class);
@@ -534,7 +583,7 @@ public class GoogleMobileAdsTest {
 
   @Test
   public void flutterAdListener_onRewardedAdUserEarnedReward() {
-    final FlutterRewardedAd ad = new FlutterRewardedAd(testManager, "testId", request);
+    final FlutterRewardedAd ad = new FlutterRewardedAd(testManager, "testId", request, null);
     testManager.trackAd(ad, 0);
 
     testManager.onRewardedAdUserEarnedReward(
@@ -550,5 +599,41 @@ public class GoogleMobileAdsTest {
     assertThat(
         call.arguments,
         (Matcher) hasEntry("rewardItem", new FlutterRewardedAd.FlutterRewardItem(23, "coins")));
+  }
+
+  @Test
+  public void internalInitDisposesAds() {
+    // Set up testManager so that two ads have already been loaded and tracked.
+    final FlutterRewardedAd rewarded = Mockito.mock(FlutterRewardedAd.class);
+    final FlutterBannerAd banner = Mockito.mock(FlutterBannerAd.class);
+    testManager.trackAd(rewarded, 0);
+    testManager.trackAd(banner, 1);
+
+    assertEquals(testManager.adIdFor(rewarded), (Integer) 0);
+    assertEquals(testManager.adIdFor(banner), (Integer) 1);
+    assertEquals(testManager.adForId(0), rewarded);
+    assertEquals(testManager.adForId(1), banner);
+
+    // Check that ads are removed and disposed when "_init" is called.
+    AdInstanceManager testManagerSpy = Mockito.spy(testManager);
+    GoogleMobileAdsPlugin plugin = new GoogleMobileAdsPlugin(null, testManagerSpy);
+    Result result = Mockito.mock(Result.class);
+    MethodCall methodCall = new MethodCall("_init", null);
+    plugin.onMethodCall(methodCall, result);
+
+    verify(testManagerSpy).disposeAllAds();
+    verify(result).success(null);
+    verify(banner).destroy();
+    assertNull(testManager.adForId(0));
+    assertNull(testManager.adForId(1));
+    assertNull(testManager.adIdFor(rewarded));
+    assertNull(testManager.adIdFor(banner));
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void trackAdThrowsErrorForDuplicateId() {
+    final FlutterBannerAd banner = Mockito.mock(FlutterBannerAd.class);
+    testManager.trackAd(banner, 0);
+    testManager.trackAd(banner, 0);
   }
 }
