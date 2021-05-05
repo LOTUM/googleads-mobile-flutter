@@ -106,7 +106,7 @@ class AdInstanceManager {
         );
         break;
       case 'onAdFailedToShow':
-        ad.listener?.onAdFailedToShow(ad, arguments['adError']);
+        ad.listener.onAdFailedToShow?.call(ad, arguments['adError']);
         break;
       default:
         debugPrint('invalid ad event name: $eventName');

@@ -274,7 +274,7 @@ class AdListener {
   )? onPaidEvent;
 
   /// Called when an ad failed to show.
-  final void Function(Ad ad, LoadAdError error) onAdFailedToShow;
+  final void Function(Ad ad, LoadAdError error)? onAdFailedToShow;
 }
 
 /// The base class for all ads.
