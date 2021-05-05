@@ -271,7 +271,7 @@ class AdListener {
     double value,
     int precision,
     String currencyCode,
-  ) onPaidEvent;
+  )? onPaidEvent;
 
   /// Called when an ad failed to show.
   final void Function(Ad ad, LoadAdError error) onAdFailedToShow;

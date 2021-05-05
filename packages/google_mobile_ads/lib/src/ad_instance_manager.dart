@@ -96,9 +96,11 @@ class AdInstanceManager {
             ?.call(ad as RewardedAd, arguments['rewardItem']);
         break;
       case 'onPaidEvent':
-        ad.listener?.onPaidEvent(
+        assert(arguments['valueMicros'] != null &&
+            arguments['valueMicros'] is num);
+        ad.listener.onPaidEvent?.call(
           ad,
-          arguments['valueMicros'] / 1000000,
+          arguments['valueMicros'] / 1000000.0,
           arguments['precision'],
           arguments['currencyCode'],
         );
