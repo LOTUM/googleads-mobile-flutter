@@ -359,15 +359,13 @@
 }
 
 - (void)show {
-  if (self.interstitial) {
-    [self.interstitial presentFromRootViewController:_rootViewController];
-  } else {
-    NSLog(@"InterstitialAd failed to show because the ad was not ready.");
+  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 5 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+    NSLog(@"Fake: InterstitialAd failed to show because the ad was not ready.");
     [self.manager didFailToPresentFullScreenContentWithError:self
                                                        error:[NSError errorWithDomain:@""
                                                                                  code:-1
                                                                              userInfo:@{NSLocalizedDescriptionKey: @"InterstitialAd failed to show because the ad was not ready."}]];
-  }
+  });
 }
 
 #pragma mark - GADFullScreenContentDelegate
@@ -535,22 +533,13 @@
 }
 
 - (void)show {
-  if (self.rewardedAd) {
-    [self.rewardedAd presentFromRootViewController:_rootViewController
-                          userDidEarnRewardHandler:^{
-                            GADAdReward *reward = self.rewardedAd.adReward;
-                            FLTRewardItem *fltReward =
-                                [[FLTRewardItem alloc] initWithAmount:reward.amount
-                                                                 type:reward.type];
-                            [self.manager onRewardedAdUserEarnedReward:self reward:fltReward];
-                          }];
-  } else {
-    NSLog(@"RewardedAd failed to show because the ad was not ready.");
-    [self.manager didFailToPresentFullScreenContentWithError:self
-                                                       error:[NSError errorWithDomain:@""
-                                                                                 code:@-1
-                                                                             userInfo:@{NSLocalizedDescriptionKey: @"RewardedAd failed to show because the ad was not ready."}]];
-  }
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 5 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+        NSLog(@"Fake: RewardedAd failed to show because the ad was not ready.");
+        [self.manager didFailToPresentFullScreenContentWithError:self
+                                                           error:[NSError errorWithDomain:@""
+                                                                                     code:@-1
+                                                                                 userInfo:@{NSLocalizedDescriptionKey: @"RewardedAd failed to show because the ad was not ready."}]];
+    });
 }
 
 #pragma mark - GADFullScreenContentDelegate

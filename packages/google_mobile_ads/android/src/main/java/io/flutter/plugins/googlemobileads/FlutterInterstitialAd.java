@@ -71,13 +71,8 @@ class FlutterInterstitialAd extends FlutterAd.FlutterOverlayAd {
 
   @Override
   public void show() {
-    if (ad == null) {
-      Log.e(TAG, "The interstitial wasn't loaded yet.");
-      manager.onFailedToShowFullScreenContent(FlutterInterstitialAd.this,
-              new AdError(-1, "", "The interstitial wasn't loaded yet."));
-      return;
-    }
-    ad.setFullScreenContentCallback(new FlutterFullScreenContentCallback(manager, this));
-    ad.show(manager.activity);
+    Log.e(TAG, "Fake: The interstitial wasn't loaded yet.");
+    manager.onFailedToShowFullScreenContent(FlutterInterstitialAd.this,
+            new AdError(-1, "", "The interstitial wasn't loaded yet."));
   }
 }
