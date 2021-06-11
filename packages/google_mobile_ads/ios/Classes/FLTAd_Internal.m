@@ -548,7 +548,7 @@
     NSLog(@"RewardedAd failed to show because the ad was not ready.");
     [self.manager didFailToPresentFullScreenContentWithError:self
                                                        error:[NSError errorWithDomain:@""
-                                                                                 code:@-1
+                                                                                 code:-1
                                                                              userInfo:@{NSLocalizedDescriptionKey: @"RewardedAd failed to show because the ad was not ready."}]];
   }
 }
