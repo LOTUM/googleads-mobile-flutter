@@ -22,6 +22,7 @@ import com.google.android.gms.ads.AdError;
 import com.google.android.gms.ads.LoadAdError;
 import com.google.android.gms.ads.interstitial.InterstitialAd;
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
+import java.lang.ref.WeakReference;
 
 class FlutterInterstitialAd extends FlutterAd.FlutterOverlayAd {
   private static final String TAG = "FlutterInterstitialAd";
@@ -33,10 +34,12 @@ class FlutterInterstitialAd extends FlutterAd.FlutterOverlayAd {
   @NonNull private final FlutterAdLoader flutterAdLoader;
 
   public FlutterInterstitialAd(
+      int adId,
       @NonNull AdInstanceManager manager,
       @NonNull String adUnitId,
       @NonNull FlutterAdRequest request,
       @NonNull FlutterAdLoader flutterAdLoader) {
+    super(adId);
     this.manager = manager;
     this.adUnitId = adUnitId;
     this.request = request;
@@ -50,23 +53,23 @@ class FlutterInterstitialAd extends FlutterAd.FlutterOverlayAd {
           manager.activity,
           adUnitId,
           request.asAdRequest(),
-          new InterstitialAdLoadCallback() {
-            @Override
-            public void onAdLoaded(@NonNull InterstitialAd interstitialAd) {
-              FlutterInterstitialAd.this.ad = interstitialAd;
-              interstitialAd.setOnPaidEventListener(
-                  new FlutterPaidEventListener(manager, FlutterInterstitialAd.this));
-              FlutterInterstitialAd.this.manager.onAdLoaded(
-                  FlutterInterstitialAd.this, interstitialAd.getResponseInfo());
-            }
-
-            @Override
-            public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
-              FlutterInterstitialAd.this.manager.onAdFailedToLoad(
-                  FlutterInterstitialAd.this, new FlutterAd.FlutterLoadAdError(loadAdError));
-            }
-          });
+          new DelegatingInterstitialAdLoadCallback(this));
     }
+  }
+
+  void onAdLoaded(InterstitialAd ad) {
+    this.ad = ad;
+    ad.setOnPaidEventListener(new FlutterPaidEventListener(manager, this));
+    manager.onAdLoaded(adId, ad.getResponseInfo());
+  }
+
+  void onAdFailedToLoad(LoadAdError loadAdError) {
+    manager.onAdFailedToLoad(adId, new FlutterAd.FlutterLoadAdError(loadAdError));
+  }
+
+  @Override
+  void dispose() {
+    ad = null;
   }
 
   @Override
@@ -77,7 +80,32 @@ class FlutterInterstitialAd extends FlutterAd.FlutterOverlayAd {
               new AdError(-1, "", "The interstitial wasn't loaded yet."));
       return;
     }
-    ad.setFullScreenContentCallback(new FlutterFullScreenContentCallback(manager, this));
+    ad.setFullScreenContentCallback(new FlutterFullScreenContentCallback(manager, adId));
     ad.show(manager.activity);
+  }
+
+  /** An InterstitialAdLoadCallback that just forwards events to a delegate. */
+  private static final class DelegatingInterstitialAdLoadCallback
+      extends InterstitialAdLoadCallback {
+
+    private final WeakReference<FlutterInterstitialAd> delegate;
+
+    DelegatingInterstitialAdLoadCallback(FlutterInterstitialAd delegate) {
+      this.delegate = new WeakReference<>(delegate);
+    }
+
+    @Override
+    public void onAdLoaded(@NonNull InterstitialAd interstitialAd) {
+      if (delegate.get() != null) {
+        delegate.get().onAdLoaded(interstitialAd);
+      }
+    }
+
+    @Override
+    public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
+      if (delegate.get() != null) {
+        delegate.get().onAdFailedToLoad(loadAdError);
+      }
+    }
   }
 }

@@ -265,6 +265,7 @@ public class GoogleMobileAdsPlugin implements FlutterPlugin, ActivityAware, Meth
       case "loadBannerAd":
         final FlutterBannerAd bannerAd =
             new FlutterBannerAd(
+                call.<Integer>argument("adId"),
                 instanceManager,
                 call.<String>argument("adUnitId"),
                 call.<FlutterAdRequest>argument("request"),
@@ -291,6 +292,7 @@ public class GoogleMobileAdsPlugin implements FlutterPlugin, ActivityAware, Meth
                 .setRequest(call.<FlutterAdRequest>argument("request"))
                 .setAdManagerRequest(call.<FlutterAdManagerAdRequest>argument("adManagerRequest"))
                 .setCustomOptions(call.<Map<String, Object>>argument("customOptions"))
+                .setId(call.<Integer>argument("adId"))
                 .build();
         instanceManager.trackAd(nativeAd, call.<Integer>argument("adId"));
         nativeAd.load();
@@ -299,6 +301,7 @@ public class GoogleMobileAdsPlugin implements FlutterPlugin, ActivityAware, Meth
       case "loadInterstitialAd":
         final FlutterInterstitialAd interstitial =
             new FlutterInterstitialAd(
+                call.<Integer>argument("adId"),
                 instanceManager,
                 call.<String>argument("adUnitId"),
                 call.<FlutterAdRequest>argument("request"),
@@ -318,6 +321,7 @@ public class GoogleMobileAdsPlugin implements FlutterPlugin, ActivityAware, Meth
         if (request != null) {
           rewardedAd =
               new FlutterRewardedAd(
+                  call.<Integer>argument("adId"),
                   requireNonNull(instanceManager),
                   adUnitId,
                   request,
@@ -326,6 +330,7 @@ public class GoogleMobileAdsPlugin implements FlutterPlugin, ActivityAware, Meth
         } else if (adManagerRequest != null) {
           rewardedAd =
               new FlutterRewardedAd(
+                  call.<Integer>argument("adId"),
                   requireNonNull(instanceManager),
                   adUnitId,
                   adManagerRequest,
@@ -343,6 +348,7 @@ public class GoogleMobileAdsPlugin implements FlutterPlugin, ActivityAware, Meth
       case "loadAdManagerBannerAd":
         final FlutterAdManagerBannerAd adManagerBannerAd =
             new FlutterAdManagerBannerAd(
+                call.<Integer>argument("adId"),
                 instanceManager,
                 call.<String>argument("adUnitId"),
                 call.<List<FlutterAdSize>>argument("sizes"),
@@ -355,6 +361,7 @@ public class GoogleMobileAdsPlugin implements FlutterPlugin, ActivityAware, Meth
       case "loadAdManagerInterstitialAd":
         final FlutterAdManagerInterstitialAd adManagerInterstitialAd =
             new FlutterAdManagerInterstitialAd(
+                call.<Integer>argument("adId"),
                 requireNonNull(instanceManager),
                 requireNonNull(call.<String>argument("adUnitId")),
                 call.<FlutterAdManagerAdRequest>argument("request"),
