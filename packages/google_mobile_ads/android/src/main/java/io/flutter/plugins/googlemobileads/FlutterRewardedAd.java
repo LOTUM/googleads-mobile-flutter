@@ -138,7 +138,7 @@ class FlutterRewardedAd extends FlutterAd.FlutterOverlayAd {
   public void show() {
     if (rewardedAd == null) {
       Log.e(TAG, "The rewarded ad wasn't loaded yet.");
-      manager.onFailedToShowFullScreenContent(FlutterRewardedAd.this,
+      manager.onFailedToShowFullScreenContent(adId,
               new AdError(-1, "", "The rewarded ad wasn't loaded yet."));
       return;
     }
